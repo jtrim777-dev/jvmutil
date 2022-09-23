@@ -2,6 +2,14 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
+http_archive(
+    name = "io_bazel_rules_kotlin",
+    urls = ["https://github.com/vaticle/rules_kotlin/archive/c2519b00299cff9df22267e8359784e9948dba67.zip"],
+    type = "zip",
+    strip_prefix = "rules_kotlin-c2519b00299cff9df22267e8359784e9948dba67",
+    sha256 = "1455f2ec4bf7ea12d2c90b0dfd6402553c3bb6cbc0271023e2e01ccdefb4a49a",
+)
+
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kotlin_repositories", "kt_register_toolchains")
 kotlin_repositories()
 kt_register_toolchains()
@@ -29,6 +37,13 @@ maven_install(
     strict_visibility = True,
     version_conflict_policy = "pinned",
     fetch_sources = True,
+)
+
+git_repository(
+    name = "rules_python",
+    remote = "https://github.com/bazelbuild/rules_python.git",
+    tag = "0.1.0",
+    patch_args = ["-p1"],
 )
 
 http_archive(

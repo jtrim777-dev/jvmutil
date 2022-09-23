@@ -1,12 +1,12 @@
 class Jvmutil < Formula
   include Language::Python::Virtualenv
 
-  desc ""
-  homepage ""
+  desc "A utility for viewing and managing the currently installed and active JVMs on macOS"
+  homepage "https://github.com/jtrim777-dev/jvmutil"
   url "https://maven.jtrim777.dev/releases/dev/jtrim777/jvmutil/{version}/jvmutil.tgz"
   version "{version}"
   sha256 "{sha256}"
-  license ""
+  license "MIT"
 
   depends_on "python"
 
@@ -15,7 +15,7 @@ class Jvmutil < Formula
     virtualenv_install_with_resources
   end
 
-  test do
+  # test do
     # `test do` will create, run in and delete a temporary directory.
     #
     # This test will fail and we won't accept that! For Homebrew/homebrew-core
@@ -25,6 +25,6 @@ class Jvmutil < Formula
     #
     # The installed folder is not in the path, so use the entire path to any
     # executables being tested: `system "#{bin}/program", "do", "something"`.
-    system "false"
-  end
+    # system "false"
+  # end
 end

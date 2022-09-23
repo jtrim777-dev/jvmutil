@@ -1,0 +1,71 @@
+.\" Manpage for jvmutil.
+.TH man 1 "23 September 2022" "0.1.0" "jvmutil manpage"
+.SH NAME
+jvmutil \- view and manage the currently installed and active JVMs
+.SH SYNOPSIS
+jvmutil [-h] [-q] [-y] {list,active,find,switch} ...
+.SH DESCRIPTION
+
+.SH OPTIONS
+.SS options:
+  -h, --help            show this help message and exit
+  -q, --quiet           Reduce informational messages
+  -y, --force-first     Always choose the first option
+
+.SS subcommands:
+  The action to perform
+
+  {list,active,find,switch}
+    list                List the available JVMS
+    active              Get the currently selected JVM
+    find                Get info about an installed JVM
+    switch              Change the active JVM
+
+.SS subcommand detail:
+.TP
+list \- List the active JVMs
+jvmutil list [-h] [-f FILTER] [--fields FIELDS] [--display {table,json,raw}]
+
+options:
+  -h, --help            show this help message and exit
+  -f FILTER, --filter FILTER
+                        Filter the output by a specified tag query
+  --fields FIELDS       Comma-separated list of fields to display
+  --display {table,json,raw}
+                        Select the display mode
+
+.TP
+active \- Get the currently selected JVM
+jvmutil active [-h] [--fields FIELDS] [--display {table,json,raw}]
+
+options:
+  -h, --help            show this help message and exit
+  --fields FIELDS       Comma-separated list of fields to display
+  --display {table,json,raw}
+                        Select the display mode
+
+.TP
+find \- Get info about an installed JVM
+jvmutil find [-h] [--fields FIELDS] [--display {table,json,raw}] target
+
+positional arguments:
+  target                The JVM to look for
+
+options:
+  -h, --help            show this help message and exit
+  --fields FIELDS       Comma-separated list of fields to display
+  --display {table,json,raw}
+                        Select the display mode
+
+.TP
+switch \- Change the active JVM
+jvmutil switch [-h] [-l] target
+
+positional arguments:
+  target       The JVM to look for
+
+options:
+  -h, --help   show this help message and exit
+  -l, --local  Only set the JVM for this shell
+.SH AUTHOR
+Jake Trimble (https://github.com/jtrim777-dev/)
