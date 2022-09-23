@@ -1,0 +1,235 @@
+#/usr/bin/env python3
+
+import re, json, sys, os, subprocess, argparse
+from tabulate import tabulate
+
+class JVM:
+    SRC_PATTERN = re.compile(r'^([\d\._]+) \((\S+)\) "([^"]+)" - "([^"]+)" (.+)$')
+
+    def __init__(self, name, version, arch, provider, path):
+        self.name = name
+        self.version = version
+        self.arch = arch
+        self.provider = provider
+        self.path = path
+
+        namestrip = re.sub(r'[\s\d_\.]*$', '', name).replace(' ', '-').lower()
+        self.tag = "%s:%s:%s" % (namestrip, version, arch)
+
+    def to_json(self):
+        return {
+            'tag': self.tag,
+            'name': self.name,
+            'version': self.version,
+            'arch': self.arch,
+            'provider': self.provider,
+            'path': self.path
+        }
+
+    def tagname(self):
+        return re.sub(r'[\s\d_\.]*$', '', self.name).replace(' ', '-').lower()
+
+    def version_match(self, vz):
+        return bool(re.match('^'+re.escape(vz)+r'(?:\.|$)', self.version))
+
+    def __repr__(self):
+        # return json.dumps(self.to_json())
+        return self.tag
+
+    @staticmethod
+    def from_str(raw):
+        match = JVM.SRC_PATTERN.match(raw)
+        if match:
+            return JVM(match.group(4), match.group(1), match.group(2), match.group(3), match.group(5))
+        else:
+            raise Exception("Invalid JVM format \"%s\"" + raw)
+
+def load_jvms():
+    rez = subprocess.run(["/usr/libexec/java_home", '-V'], capture_output=True)
+    vml = rez.stderr.decode().split('\n')[1:]
+    vml = [ s.strip() for s in vml if JVM.SRC_PATTERN.match(s.strip()) ]
+
+    return [ JVM.from_str(s) for s in vml ]
+
+def get_current_jvm(jvms):
+    evar = os.getenv('JAVA_HOME')
+
+    if len(evar) > 1:
+        path = evar.strip()
+    else:
+        rez = subprocess.run(["/usr/libexec/java_home"], capture_output=True)
+
+        path = rez.stdout.decode().strip()
+
+    for j in jvms:
+        if j.path == path:
+            return j
+
+    raise Exception("Active JVM with path %s did not match any known JVMS" % path)
+
+def parse_query(query):
+    if len(query) == 0:
+        return lambda j: True
+
+    if re.match(r'^[\d\._]+$', query):
+        return lambda j: j.version_match(query)
+
+    pts = query.split(':')
+    if len(pts) == 1:
+        return lambda j: pts[0] in j.tagname()
+    if len(pts) == 2:
+        return lambda j: pts[0] in j.tagname() and j.version_match(pts[1])
+    elif len(pts) == 3:
+        return lambda j: pts[0] in j.tagname() and j.version_match(pts[1]) and pts[2] in j.arch
+
+    return lambda j: False
+
+def set_jhome(path, local):
+    if local:
+        viz = 'g'
+    else:
+        viz = 'U'
+
+    rez = subprocess.run(["fish", "-c", "set", "-%sx" % viz, "JAVA_HOME", "'%s'" % path], capture_output=True)
+
+    if rez.returncode != 0:
+        raise Exception("Failed to set JAVA_HOME: " + rez.stderr.decode())
+
+def choose_jvm(opts):
+    sform = [ "[%i] %s" % (p[0]+1, p[1].tag) for p in enumerate(opts) ]
+    print('  '.join(sform) + '\n')
+
+    while True:
+        choice = input("[Selection #] ")
+
+        try:
+            sel = int(choice)
+
+            if 0 < sel <= len(opts):
+                print()
+                return opts[sel - 1]
+            else:
+                print("Selection %i is out of bounds" % sel)
+        except Exception as e:
+            print("Selection '%s' is not a number" % sel)
+
+def tabulate_data(raw):
+    return tabulate(raw, headers='keys', tablefmt='github')
+
+def display_jvms(jvms, keys, format):
+    asj = [ j.to_json() for j in jvms ]
+    data = [ { k:j[k] for k in keys } for j in asj ]
+
+    if format == 'json':
+        if len(data) == 1:
+            data = data[0]
+
+        return json.dumps(data)
+    elif format == 'table':
+        return tabulate_data(data)
+    elif format == 'raw':
+        out = []
+        for d in data:
+            values = [ json.dumps(p[1]) if ' ' in p[1] else p[1] for p in d.items() ]
+            out.append('  '.join(values))
+
+        return '\n'.join(out)
+
+def do_list(opts, jvms, log):
+    outjs = list(filter(parse_query(opts.filter), jvms))
+
+    log("Found %i installed JVMs:" % len(outjs))
+    print(display_jvms(outjs, opts.fields, opts.display))
+
+def do_active(opts, jvms, log):
+    current = get_current_jvm(jvms)
+
+    log("Currently selected JVM:")
+    print(display_jvms([current], opts.fields, opts.display))
+
+def do_find(opts, jvms, log):
+    outjs = list(filter(parse_query(opts.target), jvms))
+
+    if len(outjs) == 1 or opts.force_first:
+        sel = outjs[0]
+    else:
+        print("More than one JVM matches the filter '%s', choose the one to display" % opts.target)
+        sel = choose_jvm(outjs)
+
+    log("Found JVM matching filter '%s'" % opts.target)
+    print(display_jvms([sel], opts.fields, opts.display))
+
+def do_switch(opts, jvms, log):
+    outjs = list(filter(parse_query(opts.target), jvms))
+
+    if len(outjs) == 1 or opts.force_first:
+        sel = outjs[0]
+    else:
+        print("More than one JVM matches the filter '%s', choose the one to display" % opts.target)
+        sel = choose_jvm(outjs)
+
+    log("Found JVM %s [%s] for filter %s at %s" % (sel.name, sel.tag, opts.target, sel.path))
+
+    set_jhome(sel.path, opts.local)
+
+    log("Set active JVM to version %s [%s]" % (sel.version, sel.tag))
+
+def generate_parser():
+    def commalist(raw):
+        return raw.split(',')
+    allfields = ['tag','name','version','arch','provider','path']
+
+    desc = "A utility for viewing and managing the currently installed and active JVMs on macOS"
+
+    parser = argparse.ArgumentParser(description=desc)
+
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help="Reduce informational messages")
+    parser.add_argument('-y', '--force-first', action='store_true',
+                        help="Always choose the first option")
+
+    subs = parser.add_subparsers(description="The action to perform",
+                                 dest='cmd', required=True)
+
+    list_parser = subs.add_parser('list', help='List the available JVMS')
+    list_parser.add_argument('-f', '--filter', help="Filter the output by a specified tag query", default='')
+    list_parser.add_argument('--fields', help='Comma-separated list of fields to display', default=allfields, type=commalist)
+    list_parser.add_argument('--display', choices=['table','json','raw'], help="Select the display mode", default='table')
+
+    active_parser = subs.add_parser('active', help='Get the currently selected JVM')
+    active_parser.add_argument('--fields', help='Comma-separated list of fields to display', default=allfields, type=commalist)
+    active_parser.add_argument('--display', choices=['table','json','raw'], help="Select the display mode", default='table')
+
+    find_parser = subs.add_parser('find', help='Get info about an installed JVM')
+    find_parser.add_argument('target', help="The JVM to look for")
+    find_parser.add_argument('--fields', help='Comma-separated list of fields to display', default=allfields, type=commalist)
+    find_parser.add_argument('--display', choices=['table','json','raw'], help="Select the display mode", default='table')
+
+    switch_parser = subs.add_parser('switch', help='Change the active JVM')
+    switch_parser.add_argument('target', help="The JVM to look for")
+    switch_parser.add_argument('-l', '--local', action='store_true', help='Only set the JVM for this shell')
+
+    return parser
+
+if __name__ == '__main__':
+    parser = generate_parser()
+
+    opts = parser.parse_args()
+
+    jvms = load_jvms()
+
+    if opts.quiet:
+        def cmdlog(s):
+            pass
+    else:
+        def cmdlog(s):
+            print("\u001b[36m%s\u001b[0m" % s)
+
+    if opts.cmd == 'list':
+        do_list(opts, jvms, cmdlog)
+    elif opts.cmd == 'active':
+        do_active(opts, jvms, cmdlog)
+    elif opts.cmd == 'find':
+        do_find(opts, jvms, cmdlog)
+    elif opts.cmd == 'switch':
+        do_switch(opts, jvms, cmdlog)
