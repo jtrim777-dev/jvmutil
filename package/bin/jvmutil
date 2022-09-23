@@ -85,16 +85,12 @@ def parse_query(query):
 
     return lambda j: False
 
-def set_jhome(path, local):
-    if local:
-        viz = 'g'
-    else:
-        viz = 'U'
+def set_current_jvm(jvm):
+    selfpath = os.path.realpath(os.path.dirname(__file__))
 
-    rez = run(["fish", "-c", "set", "-%sx" % viz, "JAVA_HOME", "'%s'" % path], capture_output=True)
-
+    rez = run([selfpath+"/linkhome", jvm.path], capture_output=True)
     if rez.returncode != 0:
-        raise Exception("Failed to set JAVA_HOME: " + rez.stderr.decode())
+        raise Exception("Failed to relink JVM: " + rez.stderr.decode()) 
 
 def choose_jvm(opts):
     sform = [ "[%i] %s" % (p[0]+1, p[1].tag) for p in enumerate(opts) ]
@@ -171,18 +167,14 @@ def do_switch(opts, jvms, log):
 
     log("Found JVM %s [%s] for filter %s at %s" % (sel.name, sel.tag, opts.target, sel.path))
 
-    set_jhome(sel.path, opts.local)
+    set_current_jvm(sel.path, opts.local)
 
     log("Set active JVM to version %s [%s]" % (sel.version, sel.tag))
 
 def do_relink(opts, jvms, log):
-    selfpath = os.path.realpath(os.path.dirname(__file__))
     current = get_current_jvm(jvms)
 
-    run(["mkdir", "-p", "%s/../opt" % selfpath])
-    if os.path.exists("%s/../opt/javahome" % selfpath):
-        run(["rm", "%s/../opt/javahome" % selfpath])
-    run(["ln", "-s", current.path, "%s/../opt/javahome" % selfpath])
+    set_current_jvm(current)
 
 def generate_parser():
     def commalist(raw):
@@ -217,7 +209,6 @@ def generate_parser():
 
     switch_parser = subs.add_parser('switch', help='Change the active JVM')
     switch_parser.add_argument('target', help="The JVM to look for")
-    switch_parser.add_argument('-l', '--local', action='store_true', help='Only set the JVM for this shell')
 
     relink_parser = subs.add_parser('relink', help='Setup the symlink which controls JVM finding')
 

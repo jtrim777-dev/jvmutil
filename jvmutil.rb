@@ -13,9 +13,19 @@ class Jvmutil < Formula
   def install
     bin.install Dir["bin/*"]
     man1.install Dir["share/man/man1/*"]
-    chmod "ugo=rwx", bin/"jvmutil", verbose: true
+    # chmod "ugo=rwx", bin/"jvmutil", verbose: true
 
     executable = (bin/"jvmutil").to_s
     system executable, "relink"
+  end
+
+  def caveats
+    <<~EOS
+      This package creates a symlink to the active JVM at:
+        #{prefix}/opt/javahome
+
+      In order to have your system recognize this path, in your shell
+      profile you MUST set JAVA_HOME to "#{prefix}/opt/javahome"
+    EOS
   end
 end
