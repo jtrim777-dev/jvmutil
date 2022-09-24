@@ -1,9 +1,9 @@
 .\" Manpage for jvmutil.
-.TH man 1 "23 September 2022" "0.1.0" "jvmutil manpage"
+.TH man 1 "23 September 2022" "0.1.7" "jvmutil manpage"
 .SH NAME
 jvmutil \- view and manage the currently installed and active JVMs
 .SH SYNOPSIS
-jvmutil [-h] [-q] [-y] {list,active,find,switch} ...
+jvmutil [-h] [-q] [-y] {list,active,find,switch,relink} ...
 .SH DESCRIPTION
 
 .SH OPTIONS
@@ -20,6 +20,7 @@ jvmutil [-h] [-q] [-y] {list,active,find,switch} ...
     active              Get the currently selected JVM
     find                Get info about an installed JVM
     switch              Change the active JVM
+    relink              Setup the symlink which controls JVM finding
 
 .SS subcommand detail:
 .TP
