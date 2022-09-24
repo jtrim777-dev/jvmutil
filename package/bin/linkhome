@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
 set -e
-OPT="$(dirname $0)/../opt"
 
-mkdir -p "$OPT"
-if [ -e "$OPT/javahome" ]; then
-  rm "$OPT/javahome"
+mkdir -p "$1"
+if [ -e "$1/javahome" ]; then
+  rm "$1/javahome"
 fi
 
-ln -s "$1" "$OPT/javahome"
+ln -s "$2" "$1/javahome"

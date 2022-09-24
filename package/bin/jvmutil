@@ -3,6 +3,10 @@
 import re, json, sys, os, argparse
 from tabulate import tabulate
 from subprocess import run
+from os.path import dirname
+
+BIN_PATH="{{BIN_PATH}}"
+ETC_PATH="{{ETC_PATH}}"
 
 class JVM:
     SRC_PATTERN = re.compile(r'^([\d\._]+) \((\S+)\) "([^"]+)" - "([^"]+)" (.+)$')
@@ -57,6 +61,9 @@ def get_current_jvm(jvms):
 
     if evar and len(evar) > 1:
         path = evar.strip()
+
+        if os.path.islink(path):
+            path = os.path.realpath(os.readlink(path))
     else:
         rez = run(["/usr/libexec/java_home"], capture_output=True)
 
@@ -86,11 +93,9 @@ def parse_query(query):
     return lambda j: False
 
 def set_current_jvm(jvm):
-    selfpath = os.path.realpath(os.path.dirname(__file__))
-
-    rez = run([selfpath+"/linkhome", jvm.path], capture_output=True)
+    rez = run([BIN_PATH+"/linkhome", ETC_PATH, jvm.path], capture_output=True)
     if rez.returncode != 0:
-        raise Exception("Failed to relink JVM: " + rez.stderr.decode()) 
+        raise Exception("Failed to relink JVM: " + rez.stderr.decode())
 
 def choose_jvm(opts):
     sform = [ "[%i] %s" % (p[0]+1, p[1].tag) for p in enumerate(opts) ]
@@ -167,7 +172,7 @@ def do_switch(opts, jvms, log):
 
     log("Found JVM %s [%s] for filter %s at %s" % (sel.name, sel.tag, opts.target, sel.path))
 
-    set_current_jvm(sel.path, opts.local)
+    set_current_jvm(sel)
 
     log("Set active JVM to version %s [%s]" % (sel.version, sel.tag))
 

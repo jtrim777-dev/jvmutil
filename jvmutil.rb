@@ -16,16 +16,20 @@ class Jvmutil < Formula
     # chmod "ugo=rwx", bin/"jvmutil", verbose: true
 
     executable = (bin/"jvmutil").to_s
+
+    system "sed", "-i", "", "s:{{BIN_PATH}}:#{bin.to_s}:", executable
+    system "sed", "-i", "", "s:{{ETC_PATH}}:#{pkgetc.to_s}:", executable
+
     system executable, "relink"
   end
 
   def caveats
     <<~EOS
       This package creates a symlink to the active JVM at:
-        #{prefix}/opt/javahome
+        #{pkgetc}/javahome
 
       In order to have your system recognize this path, in your shell
-      profile you MUST set JAVA_HOME to "#{prefix}/opt/javahome"
+      profile you MUST set JAVA_HOME to "#{pkgetc}/javahome"
     EOS
   end
 end
