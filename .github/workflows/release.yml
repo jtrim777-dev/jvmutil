@@ -17,6 +17,7 @@ jobs:
         BAZELDIST_USERNAME: ${{ secrets.bazeldist_user }}
         BAZELDIST_PASSWORD: ${{ secrets.bazeldist_token }}
         GITHUB_ACTOR: Jtrim777
+        GITHUB_EMAIL: jatrimble777@gmail.com
         GITHUB_TOKEN: ${{ secrets.github_token }}
     steps:
       - uses: actions/checkout@v2
