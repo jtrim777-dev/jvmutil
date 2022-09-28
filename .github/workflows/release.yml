@@ -1,0 +1,48 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    environment: release
+    runs-on: ubuntu-latest
+    container:
+      image: "registry.digitalocean.com/anemoi/bazelbase:latest"
+      credentials:
+        username: ${{ secrets.digitalocean_token }}
+        password: ${{ secrets.digitalocean_token }}
+      env:
+        BAZELDIST_USERNAME: ${{ secrets.bazeldist_user }}
+        BAZELDIST_PASSWORD: ${{ secrets.bazeldist_token }}
+        GITHUB_ACTOR: Jtrim777
+        GITHUB_TOKEN: ${{ secrets.github_token }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set env
+        run: |
+          VTAG="${GITHUB_REF#refs/*/}"
+          XVZN=$(echo -n "$VTAG" | sed s/v//)
+          echo "RELEASE_VERSION=$XVZN" >> $GITHUB_ENV
+      - name: Load Bazel
+        run: bazel info
+      - name: Update version refs
+        run: |
+          OLDVZN=$(cat VERSION)
+          echo -n "${{ env.RELEASE_VERSION }}" > VERSION
+          sed -i "s/$OLDVZN/${{ env.RELEASE_VERSION }}/g" package/man/jvmutil.man
+      - name: Commit version update
+        uses: EndBug/add-and-commit@v7
+        with:
+          author_name: GitHub Actions
+          author_email: Jtrim777
+          message: 'Update versioning info'
+          branch: main
+          pull: 'NO-PULL'
+          push: true
+          tag: 'v${{ env.RELEASE_VERSION }} --force'
+      - name: Deploy package
+        run: bazel run //:deploy-pkg -- release
+      - name: Deploy formula
+        run: bazel run //:deploy-formula -- release
