@@ -24,6 +24,28 @@ subcommands:
     relink              Setup the symlink which controls JVM finding
 ```
 
+### Filters
+The `switch` and `find` commands both have a "filter" as their primary
+argument, and the `list` command accepts a filter passed to the `-f` flag.
+Filters operate over the 'tag' field of a JVM, and have one of the following
+formats:
+- `VERSION`: A semantic version number or subpart thereof, like `1.8` or `11`.
+  Matches all JDKs with a version starting with the one provided.
+- `NAME`: Any other non-version text. Matches some part of the name of the
+  JDK, like `corretto` or `openjdk`.
+- `NAME:VERSION`: Match both the name and the version. e.g. `corretto:11`.
+- `NAME:VERSION:ARCH`: Match the name, version, and platform architecture. e.g.
+  `corretto:11:arm64`. Note that either `NAME` or `VERSION` can be blank to
+  represent "Any name" or "Any version", e.g. `:1.8:arm64`.
+
+### Output Format
+The `find`, `list`, and `active` commands all output tables with several
+points of data for every JDK they find by default. The standard set of fields is
+`tag,name,version,arch,provider,path`. By providing a comma-separated list 
+of field names to the `--fields` flag you can limit or re-order this output.
+Additionally, the `--display` flag can accept one of `table` (the default),
+`json`, or `raw` to change the format of the output.
+
 ## Installation
 
 Using Homebrew:
