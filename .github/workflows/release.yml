@@ -30,15 +30,12 @@ jobs:
           RTYP=$([ $ISNAP -eq 0 ] && echo -n "release" || echo -n "snapshot")
           echo "RELEASE_VERSION=$XVZN" >> $GITHUB_ENV
           echo "RELEASE_TYPE=$RTYP" >> $GITHUB_ENV
+      - name: Install GCC
+        run: /usr/bin/installgcc
       - name: Load Bazel
-        run: |
-          /usr/bin/installgcc
-          apt install -y procps
-          bazel info
-          ps -axv
-          bazel shutdown
-          ps -axv
-          bazel clean --expunge
+        run: bazel info
+      - name: Clean Bazel caches
+        run: bazel clean --expunge
       - name: Update version refs
         run: |
           OLDVZN=$(cat VERSION)
