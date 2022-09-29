@@ -26,8 +26,7 @@ jobs:
         run: |
           VTAG="${GITHUB_REF#refs/*/}"
           XVZN=$(echo -n "$VTAG" | sed s/v//)
-          JHYPH=${XVZN//[^-]}
-          ISNAP=${#JHYPH}
+          ISNAP=$(echo -n "$XVZN" | tr -dc '-' | awk '{ print length; }')
           RTYP=$([ $ISNAP -eq 0 ] && echo -n "release" || echo -n "snapshot")
           echo "RELEASE_VERSION=$XVZN" >> $GITHUB_ENV
           echo "RELEASE_TYPE=$RTYP" >> $GITHUB_ENV
