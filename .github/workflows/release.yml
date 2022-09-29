@@ -33,7 +33,11 @@ jobs:
       - name: Load Bazel
         run: |
           /usr/bin/installgcc
+          apt install -y procps
           bazel info
+          ps -axv
+          bazel shutdown
+          ps -axv
           bazel clean --expunge
       - name: Update version refs
         run: |
