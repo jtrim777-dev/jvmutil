@@ -3,6 +3,7 @@ on:
   push:
     tags:
       - 'v*.*.*'
+      - 'v*.*.*-*'
 
 jobs:
   release:
@@ -25,11 +26,16 @@ jobs:
         run: |
           VTAG="${GITHUB_REF#refs/*/}"
           XVZN=$(echo -n "$VTAG" | sed s/v//)
+          JHYPH=${XVZN//[^-]}
+          ISNAP=${#JHYPH}
+          RTYP=$([ $ISNAP -eq 0 ] && echo -n "release" || echo -n "snapshot")
           echo "RELEASE_VERSION=$XVZN" >> $GITHUB_ENV
+          echo "RELEASE_TYPE=$RTYP" >> $GITHUB_ENV
       - name: Load Bazel
         run: |
           /usr/bin/installgcc
           bazel info
+          bazel clean --expunge
       - name: Update version refs
         run: |
           OLDVZN=$(cat VERSION)
@@ -46,6 +52,6 @@ jobs:
           push: true
           tag: 'v${{ env.RELEASE_VERSION }} --force'
       - name: Deploy package
-        run: bazel run //:deploy-pkg -- release
+        run: bazel run //:deploy-pkg -- $RELEASE_TYPE
       - name: Deploy formula
-        run: bazel run //:deploy-formula -- release
+        run: bazel run //:deploy-formula -- $RELEASE_TYPE
