@@ -5,43 +5,23 @@ on:
 
 jobs:
   deploy:
-    name: Deploy Release to Package Repo
-    environment: release
     runs-on: ubuntu-latest
-    container:
-      image: "registry.digitalocean.com/anemoi/bazelbase:latest"
-      credentials:
-        username: ${{ secrets.digitalocean_token }}
-        password: ${{ secrets.digitalocean_token }}
-      env:
-        BAZELDIST_USERNAME: ${{ secrets.bazeldist_user }}
-        BAZELDIST_PASSWORD: ${{ secrets.bazeldist_token }}
-        GITHUB_ACTOR: Jtrim777
-        GITHUB_EMAIL: jatrimble777@gmail.com
-        GITHUB_TOKEN: ${{ secrets.XREPO_TOKEN }}
+    environment: release
     steps:
-      - uses: actions/checkout@v2
-      - name: Set env
-        run: |
-          VTAG="${{ github.event.release.tag_name }}" 
-          XVZN=$(echo "$VTAG" | sed -E 's|v||g')
-          ISNAP=$(echo -n "-$XVZN" | tr -dc '-' | awk '{ print length; }')
-          RTYP=$([ $ISNAP -eq 1 ] && echo -n "release" || echo -n "snapshot")
-          echo "RELEASE_VERSION=$XVZN" >> $GITHUB_ENV
-          echo "RELEASE_TYPE=$RTYP" >> $GITHUB_ENV
-      - name: Install GCC
-        run: /usr/bin/installgcc
-      - name: Load Bazel
-        run: bazel info
-      - name: Update version refs
-        run: |
-          OLDVZN=$(cat VERSION)
-          echo -n "${{ env.RELEASE_VERSION }}" > VERSION
-          sed -i "s/$OLDVZN/${{ env.RELEASE_VERSION }}/g" package/man/jvmutil.man
-      - name: Deploy package
-        run: bazel run //:deploy-pkg -- $RELEASE_TYPE
-      - name: Deploy formula
-        run: bazel run //:deploy-formula -- $RELEASE_TYPE
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Execute Deployment
+        id: exec_deploy
+        uses: jtrim777-dev/bazeldist-action@main
+        with:
+          tag: ${{ github.event.release.tag_name }}
+          version_file: "VERSION"
+          version_sub_files: package/man/lsusb.man
+          bazel_targets: "//:deploy-pkg,//:deploy-formula"
+          email: "jatrimble777@gmail.com"
+          github_token: ${{ secrets.XREPO_TOKEN }}
+          dist_user: ${{ secrets.bazeldist_user }}
+          dist_token: ${{ secrets.bazeldist_token }}
       - name: Commit version update
         uses: EndBug/add-and-commit@v7
         with:
@@ -51,7 +31,7 @@ jobs:
           branch: main
           pull: 'NO-PULL'
           push: true
-          tag: 'v${{ env.RELEASE_VERSION }} --force'
+          tag: 'v${{ steps.exec_deploy.outputs.version }} --force'
   modify_release:
     name: Update GitHub Release Info
     environment: release
