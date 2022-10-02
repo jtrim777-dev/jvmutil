@@ -57,11 +57,13 @@ jobs:
     environment: release
     runs-on: ubuntu-latest
     if: ${{ github.event.release.prerelease }} != true
+    needs: deploy
     steps:
       - uses: actions/checkout@v2
       - name: Get Previous Tag
         id: get_tags
         run: |
+          git fetch -a
           echo ::set-output name=current_tag::$(git tag --sort "-committerdate" | sed '/-/d' | sed -n 1p)
           echo ::set-output name=previous_tag::$(git tag --sort "-committerdate" | sed '/-/d' | sed -n 2p)
       - uses: irongut/EditRelease@v1.2.0
