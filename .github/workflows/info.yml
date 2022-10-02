@@ -6,11 +6,13 @@ on:
 jobs:
   get_tag_info:
     runs-on: ubuntu-latest
-    environment: release
     steps:
       - uses: actions/checkout@v2
       - name: Get Previous Tag
         id: get_tags
         run: |
           git fetch -a
-          echo $(git tag --sort "-committerdate")
+          echo "Raw:"
+          echo -e $(git tag --sort "-committerdate")
+          echo -e $(git tag --sort "-committerdate" | sed '/-/d')
+          echo -e $(git tag --sort "-committerdate" | sed '/-/d' | sed -n 1p)
