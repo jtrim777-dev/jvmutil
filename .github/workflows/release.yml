@@ -25,8 +25,8 @@ jobs:
         run: |
           VTAG="${{ github.event.release.tag_name }}" 
           XVZN=$(echo "$VTAG" | sed -E 's|v||g')
-          ISNAP=$(echo -n "$XVZN" | tr -dc '-' | awk '{ print length; }')
-          RTYP=$([ $ISNAP -eq 0 ] && echo -n "release" || echo -n "snapshot")
+          ISNAP=$(echo -n "-$XVZN" | tr -dc '-' | awk '{ print length; }')
+          RTYP=$([ $ISNAP -eq 1 ] && echo -n "release" || echo -n "snapshot")
           echo "RELEASE_VERSION=$XVZN" >> $GITHUB_ENV
           echo "RELEASE_TYPE=$RTYP" >> $GITHUB_ENV
       - name: Install GCC
