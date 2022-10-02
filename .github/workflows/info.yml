@@ -18,4 +18,4 @@ jobs:
           echo -e $(git tag --sort "-committerdate" | sed '/-/d' | sed -n 1p)
           echo ::set-output name=current_tag::$(git tag --sort "-committerdate" | sed '/-/d' | sed -n 1p)
       - name: Check Output
-        run: echo "${{ steps.get_tags.current_tag }}"
+        run: echo "${{ steps.get_tags.outputs.current_tag }}"
