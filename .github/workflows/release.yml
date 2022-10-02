@@ -41,6 +41,10 @@ jobs:
           OLDVZN=$(cat VERSION)
           echo -n "${{ env.RELEASE_VERSION }}" > VERSION
           sed -i "s/$OLDVZN/${{ env.RELEASE_VERSION }}/g" package/man/jvmutil.man
+      - name: Deploy package
+        run: bazel run //:deploy-pkg -- $RELEASE_TYPE
+      - name: Deploy formula
+        run: bazel run //:deploy-formula -- $RELEASE_TYPE
       - name: Commit version update
         uses: EndBug/add-and-commit@v7
         with:
@@ -51,7 +55,3 @@ jobs:
           pull: 'NO-PULL'
           push: true
           tag: 'v${{ env.RELEASE_VERSION }} --force'
-      - name: Deploy package
-        run: bazel run //:deploy-pkg -- $RELEASE_TYPE
-      - name: Deploy formula
-        run: bazel run //:deploy-formula -- $RELEASE_TYPE
