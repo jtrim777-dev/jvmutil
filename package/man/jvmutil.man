@@ -1,5 +1,5 @@
 .\" Manpage for jvmutil.
-.TH man 1 "23 September 2022" "0.1.9-alpha.9" "jvmutil manpage"
+.TH man 1 "23 September 2022" "0.1.9" "jvmutil manpage"
 .SH NAME
 jvmutil \- view and manage the currently installed and active JVMs
 .SH SYNOPSIS
