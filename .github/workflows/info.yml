@@ -1,0 +1,16 @@
+name: Get Info
+on:
+  pull_request:
+    types: [synchronize]
+
+jobs:
+  get_tag_info:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get Previous Tag
+        id: get_tags
+        run: |
+          git fetch -a
+          echo $(git tag --sort "-committerdate")
