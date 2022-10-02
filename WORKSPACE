@@ -23,7 +23,8 @@ http_archive(
 
 http_archive(
     name = "bazeldist",
-    url = "https://maven.jtrim777.dev/releases/dev/jtrim777/bazeldist/0.1.4/bazeldist-all.tar.gz",
+    url = "https://maven.jtrim777.dev/releases/dev/jtrim777/bazeldist/0.1.5/bazeldist-all.tar.gz",
+    sha256 = "c96ef3754969f3dbe37e7b5065614a41b08de2850aa7d79e08e347bab282a9d1"
 )
 
 load("@bazeldist//maven:deps.bzl", "maven_artifacts_with_versions")
