@@ -34,8 +34,8 @@ jobs:
         run: /usr/bin/installgcc
       - name: Load Bazel
         run: bazel info
-      - name: Clean Bazel caches
-        run: bazel clean --expunge
+#      - name: Clean Bazel caches
+#        run: bazel clean --expunge
       - name: Update version refs
         run: |
           OLDVZN=$(cat VERSION)
