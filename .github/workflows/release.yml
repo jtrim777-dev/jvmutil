@@ -71,5 +71,5 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           id: ${{ github.event.release.id }}
           body: |
-            **Full Changelog:** [${{ steps.get_tags.previous_tag }}...${{ steps.get_tags.current_tag }}](https://github.com/jtrim777-dev/jvmutil/compare/${{ steps.get_tags.previous_tag }}...${{ steps.get_tags.current_tag }})
-            Artifacts Published to [Jtrim777 Artifact Repository](https://maven.jtrim777.dev/releases/dev/jtrim777/jvmutil/${{ steps.get_tags.current_tag }})
+            **Full Changelog:** [${{ steps.get_tags.outputs.previous_tag }}...${{ steps.get_tags.outputs.current_tag }}](https://github.com/jtrim777-dev/jvmutil/compare/${{ steps.get_tags.outputs.previous_tag }}...${{ steps.get_tags.outputs.current_tag }})
+            Artifacts Published to [Jtrim777 Artifact Repository](https://maven.jtrim777.dev/releases/dev/jtrim777/jvmutil/${{ steps.get_tags.outputs.current_tag }})
